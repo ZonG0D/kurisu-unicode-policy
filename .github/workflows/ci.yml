@@ -1,0 +1,43 @@
+name: CI
+on: [push, pull_request]
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+      - name: Install test deps
+        run: pip install pytest
+      - name: Run tests
+        run: pytest -q
+      - name: Check for banned characters
+        run: |
+          python - <<'PY'
+          import os, sys
+          banned_hex = ['0x2010','0x2011','0x2012','0x2013','0x2014','0x2015']
+          banned = [chr(int(h,16)) for h in banned_hex]
+          failures = []
+          for root, _, files in os.walk('.'):
+              for f in files:
+                  if f.startswith('.git'):
+                      continue
+                  path = os.path.join(root, f)
+                  try:
+                      with open(path, 'r', encoding='utf-8', errors='ignore') as fh:
+                          s = fh.read()
+                          for b in banned:
+                              if b in s:
+                                  failures.append((path, hex(ord(b))))
+                                  break
+                  except Exception:
+                      pass
+          if failures:
+              print('Banned characters found:')
+              for p, cp in failures:
+                  print(p, cp)
+              sys.exit(1)
+          print('No banned characters found.')
+          PY
