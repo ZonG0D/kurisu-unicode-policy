@@ -1,0 +1,17 @@
+validation:
+  unicode_ban:
+    enabled: true
+    codepoints_hex:
+      - '0x2010'
+      - '0x2011'
+      - '0x2012'
+      - '0x2013'
+      - '0x2014'
+      - '0x2015'
+    normalization: NFKC
+    action_on_violation: deny_and_rollback
+auditing:
+  storage_uri: "gs://kurisu-audit/memory/"
+  redact_mode: "hash_only"
+  include_stack_fingerprint: true
+  encryption: "server_side_managed"
